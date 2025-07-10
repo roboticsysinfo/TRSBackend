@@ -23,5 +23,6 @@ router.get("/single/blog/:id", blogController.getBlogById);
 // ❌ Delete a blog
 router.delete("/delete/blog:id", blogController.deleteBlog);
 
+router.put("/blog/view/:id", blogController.blogViewCount);
 
 module.exports = router;

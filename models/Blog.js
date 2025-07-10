@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const blogSchema = new mongoose.Schema({
+
     title: { type: String, required: true },
     description: { type: String, required: true },
     blogImage: { type: String, required: true },
@@ -9,6 +10,12 @@ const blogSchema = new mongoose.Schema({
     metaDescription: { type: String },
     metaKeywords: { type: String },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
+    blog_views: {
+        type: Number,
+        default: 0
+    },
+
+
 }, {
     timestamps: true
 });

@@ -175,3 +175,27 @@ exports.deleteBlog = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+// Blog view count increase API
+exports.blogViewCount = async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+        // Blog ka view count increase kare
+        const blog = await Blog.findByIdAndUpdate(
+            id,
+            { $inc: { blog_views: 1 } },  // Views count increase
+            { new: true }
+        );
+
+        if (!blog) return res.status(404).json({ message: "Blog not found" });
+
+        res.json({ success: true, blog_views: blog.blog_views });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+    
+}
