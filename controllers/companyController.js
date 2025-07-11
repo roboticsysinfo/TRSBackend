@@ -1,27 +1,36 @@
 const Company = require('../models/Company');
+const imagekit = require('../utils/imagekit');
 
 
 exports.createCompany = async (req, res) => {
-
   try {
-    
+
     const userId = req.user.id;
 
-    console.log("userid", userId)
-
-    // Check if user already listed a company
+    // ✅ Prevent duplicate
     const existing = await Company.findOne({ user: userId });
     if (existing) {
       return res.status(400).json({
         success: false,
         message: 'You have already listed a company',
         data: null,
-        error: null,
       });
+    }
+
+    let imageURL = '';
+
+    // ✅ Upload logo if present
+    if (req.file) {
+      const uploadedImage = await imagekit.upload({
+        file: req.file.buffer,
+        fileName: `${Date.now()}_${req.file.originalname}`,
+      });
+      imageURL = uploadedImage.url;
     }
 
     const newCompany = await Company.create({
       ...req.body,
+      logo: imageURL,
       user: userId,
     });
 
@@ -29,13 +38,12 @@ exports.createCompany = async (req, res) => {
       success: true,
       message: 'Company listed successfully',
       data: newCompany,
-      error: null,
     });
   } catch (err) {
+    console.error('Company create error:', err);
     res.status(500).json({
       success: false,
       message: 'Failed to list company',
-      data: null,
       error: err.message,
     });
   }

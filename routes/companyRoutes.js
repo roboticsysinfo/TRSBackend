@@ -3,11 +3,11 @@ const router = express.Router();
 const companyController = require('../controllers/companyController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const adminAuthMiddleware = require('../middlewares/adminAuthMiddleware');
-
+const upload = require('../middlewares/upload');
 
 
 // Create or Update (Upsert)
-router.post('/list-compnay', authMiddleware, companyController.createCompany);
+router.post('/list-compnay', upload.single('logo'), authMiddleware, companyController.createCompany);
 
 
 // ✅ Verify Company by ID
@@ -27,7 +27,7 @@ router.get('/company/by-user/:userId', companyController.getCompanyByUserId);
 
 
 // Update Company by ID
-router.put('/update/company/:id', authMiddleware, adminAuthMiddleware, companyController.updateCompany);
+router.put('/update/company/:id', upload.single('logo'), authMiddleware, adminAuthMiddleware, companyController.updateCompany);
 
 
 // Delete Company by ID

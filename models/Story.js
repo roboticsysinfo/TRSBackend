@@ -23,11 +23,29 @@ const storySchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false, // default to false
+      default: false,
     },
     storyImage: {
       type: String,
       default: "",
+    },
+    metaTitle: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    metaDescription: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    metaKeywords: {
+      type: [String],
+      default: [],
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
     },
   },
   {

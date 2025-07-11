@@ -7,7 +7,8 @@ const {
   getAllStories,
   getStoryById,
   getStoriesByUserId,
-  verifyStory
+  verifyStory,
+  getStartupStories
 } = require('../controllers/storyController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/upload');
@@ -36,6 +37,8 @@ router.put('/update-story/:id', upload.single('storyImage'), adminAuthMiddleware
 
 // DELETE - Delete story
 router.delete('/delete-story/:id', adminAuthMiddleware, deleteStory);
+
+router.get('/startup-stories', getStartupStories);
 
 
 module.exports = router;

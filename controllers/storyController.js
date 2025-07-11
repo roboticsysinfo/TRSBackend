@@ -9,7 +9,15 @@ const sendResponse = (res, success, message, data = null, status = 200) => {
 // ✅ Add Story
 exports.addStory = async (req, res) => {
   try {
-    const { title, description, category } = req.body;
+    const {
+      title,
+      description,
+      category,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      isFeatured
+    } = req.body;
 
     let imageUrl = "";
 
@@ -28,26 +36,14 @@ exports.addStory = async (req, res) => {
       description,
       category,
       user: req.user._id,
-      storyImage: imageUrl
+      storyImage: imageUrl,
+      metaTitle,
+      metaDescription,
+      metaKeywords: metaKeywords ? metaKeywords.split(',').map(kw => kw.trim()) : [],
+      isFeatured: isFeatured === 'true' // cast from string to boolean
     });
 
     sendResponse(res, true, 'Story added successfully', story, 201);
-  } catch (err) {
-    sendResponse(res, false, err.message, null, 500);
-  }
-};
-
-
-
-// ✅ Delete Story
-// ✅ Delete Story (for Admin)
-exports.deleteStory = async (req, res) => {
-  try {
-    const story = await Story.findById(req.params.id);
-    if (!story) return sendResponse(res, false, 'Story not found', null, 404);
-
-    await story.deleteOne();
-    sendResponse(res, true, 'Story deleted successfully');
   } catch (err) {
     sendResponse(res, false, err.message, null, 500);
   }
@@ -59,15 +55,25 @@ exports.updateStory = async (req, res) => {
     const story = await Story.findById(req.params.id);
     if (!story) return sendResponse(res, false, 'Story not found', null, 404);
 
-    if (story.user.toString() !== req.user._id.toString()) {
-      return sendResponse(res, false, 'Unauthorized', null, 403);
-    }
-
-    const { title, description, category } = req.body;
+    const {
+      title,
+      description,
+      category,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      isFeatured
+    } = req.body;
 
     if (title) story.title = title;
     if (description) story.description = description;
     if (category) story.category = category;
+    if (metaTitle) story.metaTitle = metaTitle;
+    if (metaDescription) story.metaDescription = metaDescription;
+    if (metaKeywords)
+      story.metaKeywords = metaKeywords.split(',').map(kw => kw.trim());
+    if (isFeatured !== undefined)
+      story.isFeatured = isFeatured === 'true';
 
     if (req.file) {
       const uploadResponse = await imagekit.upload({
@@ -86,22 +92,44 @@ exports.updateStory = async (req, res) => {
   }
 };
 
+// ✅ Delete Story
+exports.deleteStory = async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return sendResponse(res, false, 'Story not found', null, 404);
 
-
+    await story.deleteOne();
+    sendResponse(res, true, 'Story deleted successfully');
+  } catch (err) {
+    sendResponse(res, false, err.message, null, 500);
+  }
+};
 
 // ✅ Get All Stories (with pagination + search)
 exports.getAllStories = async (req, res) => {
+  
   try {
+
     const { page = 1, limit = 10, search = '' } = req.query;
 
+    // 1. Find "Startup" category
+    const startupCategory = await Category.findOne({ name: { $regex: '^startup$', $options: 'i' } });
+
+    // 2. Base query
     const query = {
-      title: { $regex: search, $options: 'i' }
+      title: { $regex: search, $options: 'i' },
     };
 
+    // 3. Exclude Startup category if found
+    if (startupCategory) {
+      query.category = { $ne: startupCategory._id };
+    }
+
     const total = await Story.countDocuments(query);
+
     const stories = await Story.find(query)
       .populate('category')
-      .populate('user', 'name email') // adjust fields as needed
+      .populate('user', 'name email')
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });
@@ -110,12 +138,14 @@ exports.getAllStories = async (req, res) => {
       total,
       currentPage: Number(page),
       totalPages: Math.ceil(total / limit),
-      stories
+      stories,
     });
   } catch (err) {
     sendResponse(res, false, err.message, null, 500);
   }
 };
+
+
 
 // ✅ Get Story By ID
 exports.getStoryById = async (req, res) => {
@@ -132,7 +162,6 @@ exports.getStoryById = async (req, res) => {
   }
 };
 
-// ✅ Get Stories By User ID
 // ✅ Get Stories By User ID (with pagination + search)
 exports.getStoriesByUserId = async (req, res) => {
   try {
@@ -152,53 +181,67 @@ exports.getStoriesByUserId = async (req, res) => {
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      message: 'User stories fetched successfully',
-      data: {
-        total,
-        currentPage: Number(page),
-        totalPages: Math.ceil(total / limit),
-        stories
-      }
+    sendResponse(res, true, 'User stories fetched successfully', {
+      total,
+      currentPage: Number(page),
+      totalPages: Math.ceil(total / limit),
+      stories
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      data: null
-    });
+    sendResponse(res, false, err.message, null, 500);
   }
 };
-
 
 // ✅ Verify Story (Set isVerified to true)
 exports.verifyStory = async (req, res) => {
   try {
     const story = await Story.findById(req.params.id);
 
-    if (!story) {
-      return res.status(404).json({
-        success: false,
-        message: 'Story not found',
-        data: null
-      });
-    }
+    if (!story) return sendResponse(res, false, 'Story not found', null, 404);
 
     story.isVerified = true;
     await story.save();
 
-    return res.status(200).json({
-      success: true,
-      message: 'Story verified successfully',
-      data: story
+    sendResponse(res, true, 'Story verified successfully', story);
+  } catch (err) {
+    sendResponse(res, false, 'Failed to verify story', null, 500);
+  }
+};
+
+
+// ✅ Get Only Startup Stories
+exports.getStartupStories = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '' } = req.query;
+
+    // 1. Find the "Startup" category
+    const startupCategory = await Category.findOne({ name: { $regex: '^Startup$', $options: 'i' } });
+    if (!startupCategory) {
+      return sendResponse(res, false, 'Startup category not found', null, 404);
+    }
+
+    // 2. Build the query
+    const query = {
+      category: startupCategory._id,
+      title: { $regex: search, $options: 'i' }
+    };
+
+    const total = await Story.countDocuments(query);
+
+    const stories = await Story.find(query)
+      .populate('category')
+      .populate('user', 'name email')
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+
+    sendResponse(res, true, 'Startup stories fetched', {
+      total,
+      currentPage: Number(page),
+      totalPages: Math.ceil(total / limit),
+      stories
     });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to verify story',
-      data: null,
-      error: err.message
-    });
+    sendResponse(res, false, err.message, null, 500);
   }
 };
