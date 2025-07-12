@@ -49,8 +49,6 @@ const sendResponse = (res, success, message, data = null, status = 200) => {
 //   }
 // };
 
-
-// ✅ Add Story
 exports.addStory = async (req, res) => {
   try {
     const {
@@ -60,7 +58,7 @@ exports.addStory = async (req, res) => {
       metaTitle,
       metaDescription,
       metaKeywords,
-      isFeatured
+      isFeatured,
     } = req.body;
 
     let imageUrl = "";
@@ -69,36 +67,43 @@ exports.addStory = async (req, res) => {
       const uploadResponse = await imagekit.upload({
         file: req.file.buffer,
         fileName: `story_${Date.now()}`,
-        folder: "stories"
+        folder: "stories",
       });
 
       imageUrl = uploadResponse.url;
     }
 
-    // ✅ Determine user or admin ID
-    const userId = req.user?._id || req.admin?._id;
+    // 🧠 Check who is adding (Admin or User)
+    const isAdmin = !!req.admin;
+    const userId = isAdmin ? req.admin._id : req.user?._id;
 
     if (!userId) {
       return sendResponse(res, false, "Unauthorized: User or Admin ID not found", null, 401);
     }
 
+    // ✅ Create Story
     const story = await Story.create({
       title,
       description,
       category,
-      user: userId, // 🟢 Either user or admin's ID
+      user: userId,
       storyImage: imageUrl,
       metaTitle,
       metaDescription,
-      metaKeywords: metaKeywords ? metaKeywords.split(',').map(kw => kw.trim()) : [],
-      isFeatured: isFeatured === 'true'
+      metaKeywords: metaKeywords
+        ? metaKeywords.split(",").map((kw) => kw.trim())
+        : [],
+      isFeatured: isFeatured === "true",
+      isVerified: isAdmin ? true : false, // 💡 Only admin-created stories are auto-verified
     });
 
-    sendResponse(res, true, 'Story added successfully', story, 201);
+    return sendResponse(res, true, "Story added successfully", story, 201);
   } catch (err) {
-    sendResponse(res, false, err.message, null, 500);
+    console.error("Add story error:", err.message);
+    return sendResponse(res, false, err.message, null, 500);
   }
 };
+
 
 
 
