@@ -9,6 +9,9 @@ const adminAuthMiddleware = async (req, res, next) => {
 
     const authHeader = req.headers.authorization;
 
+    console.log("auth header", authHeader);
+    
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'No token provided' });
     }
@@ -16,7 +19,7 @@ const adminAuthMiddleware = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    const admin = await Admin.findById(decoded.id).select('-password');
+    const admin = await Admin.findById(decoded.userId).select('-password');
 
     if (!admin || admin.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied: Admin only' });

@@ -19,10 +19,10 @@ router.get("/all-users", userController.getAllUsers);
 router.get('/get-user-by-id/:id', userController.getUserById);
 
 
-router.put('/update-user/:id',  authMiddleware, adminAuthMiddleware, userController.updateUser);
+router.put('/update-user/:id',  adminAuthMiddleware, userController.updateUser);
 
 
-router.delete('/delete-user/:id',  authMiddleware, adminAuthMiddleware, userController.deleteUser);
+router.delete('/delete-user/:id', adminAuthMiddleware, userController.deleteUser);
 
 
 

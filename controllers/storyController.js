@@ -7,6 +7,50 @@ const sendResponse = (res, success, message, data = null, status = 200) => {
 };
 
 // ✅ Add Story
+// exports.addStory = async (req, res) => {
+//   try {
+//     const {
+//       title,
+//       description,
+//       category,
+//       metaTitle,
+//       metaDescription,
+//       metaKeywords,
+//       isFeatured
+//     } = req.body;
+
+//     let imageUrl = "";
+
+//     if (req.file) {
+//       const uploadResponse = await imagekit.upload({
+//         file: req.file.buffer,
+//         fileName: `story_${Date.now()}`,
+//         folder: "stories"
+//       });
+
+//       imageUrl = uploadResponse.url;
+//     }
+
+//     const story = await Story.create({
+//       title,
+//       description,
+//       category,
+//       user: req.user._id,
+//       storyImage: imageUrl,
+//       metaTitle,
+//       metaDescription,
+//       metaKeywords: metaKeywords ? metaKeywords.split(',').map(kw => kw.trim()) : [],
+//       isFeatured: isFeatured === 'true' // cast from string to boolean
+//     });
+
+//     sendResponse(res, true, 'Story added successfully', story, 201);
+//   } catch (err) {
+//     sendResponse(res, false, err.message, null, 500);
+//   }
+// };
+
+
+// ✅ Add Story
 exports.addStory = async (req, res) => {
   try {
     const {
@@ -31,16 +75,23 @@ exports.addStory = async (req, res) => {
       imageUrl = uploadResponse.url;
     }
 
+    // ✅ Determine user or admin ID
+    const userId = req.user?._id || req.admin?._id;
+
+    if (!userId) {
+      return sendResponse(res, false, "Unauthorized: User or Admin ID not found", null, 401);
+    }
+
     const story = await Story.create({
       title,
       description,
       category,
-      user: req.user._id,
+      user: userId, // 🟢 Either user or admin's ID
       storyImage: imageUrl,
       metaTitle,
       metaDescription,
       metaKeywords: metaKeywords ? metaKeywords.split(',').map(kw => kw.trim()) : [],
-      isFeatured: isFeatured === 'true' // cast from string to boolean
+      isFeatured: isFeatured === 'true'
     });
 
     sendResponse(res, true, 'Story added successfully', story, 201);
@@ -48,6 +99,9 @@ exports.addStory = async (req, res) => {
     sendResponse(res, false, err.message, null, 500);
   }
 };
+
+
+
 
 // ✅ Update Story
 exports.updateStory = async (req, res) => {
@@ -107,7 +161,7 @@ exports.deleteStory = async (req, res) => {
 
 // ✅ Get All Stories (with pagination + search)
 exports.getAllStories = async (req, res) => {
-  
+
   try {
 
     const { page = 1, limit = 10, search = '' } = req.query;

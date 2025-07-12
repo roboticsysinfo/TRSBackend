@@ -31,7 +31,7 @@ router.put('/update/company/:id', upload.single('logo'), authMiddleware, adminAu
 
 
 // Delete Company by ID
-router.delete('/delete/company/:id', authMiddleware, adminAuthMiddleware, companyController.deleteCompany);
+router.delete('/delete/company/:id', adminAuthMiddleware, companyController.deleteCompany);
 
 
 module.exports = router;

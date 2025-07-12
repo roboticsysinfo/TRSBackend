@@ -16,7 +16,7 @@ const adminAuthMiddleware = require('../middlewares/adminAuthMiddleware');
 
 
 // POST - Add story
-router.post('/add-story', upload.single('storyImage'), authMiddleware, addStory);
+router.post('/add-story', upload.single('storyImage'), adminAuthMiddleware, authMiddleware, addStory);
 
 
 // put /api/stories/:id/verify
