@@ -11,7 +11,7 @@ const storyRoutes = require('./routes/storyRoutes');
 const adminRoutes = require("./routes/adminRoutes");
 const siteDetailsRoutes = require("./routes/siteDetailsRoutes");
 const blogRoutes = require("./routes/blogRoutes");
-
+const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 
@@ -37,6 +37,7 @@ app.use('/api', storyRoutes)
 app.use('/api', adminRoutes)
 app.use('/api', siteDetailsRoutes)
 app.use('/api', blogRoutes)
+app.use('/api', contactRoutes)
 // ========= Routes end=============
 
 app.get('/', (req, res) => {
