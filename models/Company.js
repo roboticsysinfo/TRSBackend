@@ -27,7 +27,8 @@ const companySchema = new mongoose.Schema({
     instagram: { type: String },
     linkedin: { type: String },
     twitter: { type: String },
-    googleMyBusiness: { type: String }
+    googleMyBusiness: { type: String },
+    website: { type: String }
   },
   businessModel: {
     type: String,

@@ -27,7 +27,7 @@ router.get('/company/by-user/:userId', companyController.getCompanyByUserId);
 
 
 // Update Company by ID
-router.put('/update/company/:id', upload.single('logo'), authMiddleware, adminAuthMiddleware, companyController.updateCompany);
+router.put('/update/company/:id', upload.single('logo'), authMiddleware, companyController.updateCompany);
 
 
 // Delete Company by ID

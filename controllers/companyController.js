@@ -4,7 +4,6 @@ const imagekit = require('../utils/imagekit');
 
 exports.createCompany = async (req, res) => {
   try {
-
     const userId = req.user.id;
 
     // ✅ Prevent duplicate
@@ -28,10 +27,23 @@ exports.createCompany = async (req, res) => {
       imageURL = uploadedImage.url;
     }
 
+    // ✅ Parse JSON strings from FormData
+    const parsedCoreTeam = req.body.coreTeam ? JSON.parse(req.body.coreTeam) : [];
+    const parsedSocialMedia = req.body.socialMedia ? JSON.parse(req.body.socialMedia) : {};
+
     const newCompany = await Company.create({
-      ...req.body,
-      logo: imageURL,
+      name: req.body.name,
+      about: req.body.about,
+      legalName: req.body.legalName,
+      headquarter: req.body.headquarter,
+      foundingDate: req.body.foundingDate,
+      businessModel: req.body.businessModel,
+      noOfEmployees: req.body.noOfEmployees,
+      category: req.body.category,
       user: userId,
+      logo: imageURL,
+      coreTeam: parsedCoreTeam,
+      socialMedia: parsedSocialMedia,
     });
 
     res.status(201).json({
@@ -72,9 +84,33 @@ exports.getAllCompanies = async (req, res) => {
 };
 
 // Update Company by ID
+// Update Company by ID (with logo upload)
 exports.updateCompany = async (req, res) => {
   try {
-    const company = await Company.findByIdAndUpdate(req.params.id, req.body, {
+    let imageURL = '';
+
+    // ✅ Upload new logo if present
+    if (req.file) {
+      const uploadedImage = await imagekit.upload({
+        file: req.file.buffer,
+        fileName: `${Date.now()}_${req.file.originalname}`,
+      });
+      imageURL = uploadedImage.url;
+    }
+
+    // ✅ Parse JSON fields if present
+    const parsedCoreTeam = req.body.coreTeam ? JSON.parse(req.body.coreTeam) : undefined;
+    const parsedSocialMedia = req.body.socialMedia ? JSON.parse(req.body.socialMedia) : undefined;
+
+    const updateData = {
+      ...req.body,
+    };
+
+    if (imageURL) updateData.logo = imageURL;
+    if (parsedCoreTeam) updateData.coreTeam = parsedCoreTeam;
+    if (parsedSocialMedia) updateData.socialMedia = parsedSocialMedia;
+
+    const company = await Company.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -95,6 +131,7 @@ exports.updateCompany = async (req, res) => {
       error: null,
     });
   } catch (err) {
+    console.error('Company update error:', err);
     res.status(500).json({
       success: false,
       message: 'Failed to update company',
@@ -103,6 +140,7 @@ exports.updateCompany = async (req, res) => {
     });
   }
 };
+
 
 // Delete Company
 exports.deleteCompany = async (req, res) => {

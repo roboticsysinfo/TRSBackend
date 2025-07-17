@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const cookie = require('cookie');
+const imagekit = require('../utils/imagekit');
 
 
 // Generate JWT Token
@@ -198,6 +199,17 @@ exports.updateUser = async (req, res) => {
   try {
     const updates = req.body;
 
+    // ✅ Upload image to ImageKit if present
+    if (req.file) {
+      const uploadedImage = await imagekit.upload({
+        file: req.file.buffer,
+        fileName: `${req.params.id}_profile.jpg`,
+        folder: "/users",
+      });
+
+      updates.profileImage = uploadedImage.url; // save URL to DB
+    }
+
     if (updates.password) {
       updates.password = await bcrypt.hash(updates.password, 10);
     }
@@ -209,12 +221,7 @@ exports.updateUser = async (req, res) => {
     ).select('-password');
 
     if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found',
-        data: null,
-        error: null,
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     res.status(200).json({
@@ -224,14 +231,11 @@ exports.updateUser = async (req, res) => {
       error: null,
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: 'Update failed',
-      data: null,
-      error: err.message,
-    });
+    res.status(500).json({ success: false, message: 'Update failed', error: err.message });
   }
 };
+
+
 
 // DELETE /api/users/:id
 exports.deleteUser = async (req, res) => {
