@@ -206,21 +206,24 @@ exports.deleteStory = async (req, res) => {
 // ✅ Get All Stories (with pagination + search)
 exports.getAllStories = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, limit = 10, search = '', category = '' } = req.query;
 
-    // 1. Find "Startup" category
-    const startupCategory = await Category.findOne({
-      name: { $regex: '^startup$', $options: 'i' },
-    });
-
-    // 2. Build query
+    // Base query: search by title
     const query = {
       title: { $regex: search, $options: 'i' },
     };
 
-    // 3. Exclude Startup category if found
-    if (startupCategory) {
-      query.category = { $ne: startupCategory._id };
+    // Apply category filter if category is passed
+    if (category) {
+      query.category = category;
+    } else {
+      // If no category filter, exclude "Startup"
+      const startupCategory = await Category.findOne({
+        name: { $regex: '^startup$', $options: 'i' },
+      });
+      if (startupCategory) {
+        query.category = { $ne: startupCategory._id };
+      }
     }
 
     const total = await Story.countDocuments(query);
@@ -232,14 +235,13 @@ exports.getAllStories = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // 4. Manually populate user/admin name
+    // Manually populate user/admin name
     const populatedStories = await Promise.all(
       stories.map(async (story) => {
         let user = await User.findById(story.user, 'name').lean();
         if (!user) {
           user = await Admin.findById(story.user, 'name').lean();
         }
-
         return {
           ...story,
           user: user ? { _id: user._id, name: user.name } : null,
@@ -258,6 +260,7 @@ exports.getAllStories = async (req, res) => {
     sendResponse(res, false, err.message, null, 500);
   }
 };
+
 
 
 
