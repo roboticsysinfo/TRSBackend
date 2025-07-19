@@ -175,6 +175,7 @@ exports.deleteCompany = async (req, res) => {
 // Get Company by User ID
 exports.getCompanyByUserId = async (req, res) => {
   try {
+
     const company = await Company.findOne({ user: req.params.userId }).populate('category user');
 
     if (!company) {
@@ -205,6 +206,7 @@ exports.getCompanyByUserId = async (req, res) => {
 // Get Company by Company ID
 exports.getCompanyById = async (req, res) => {
   try {
+
     const company = await Company.findById(req.params.id).populate('category user');
 
     if (!company) {
