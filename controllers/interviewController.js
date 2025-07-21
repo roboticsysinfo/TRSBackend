@@ -18,22 +18,32 @@ const uploadToImageKit = async (fileBuffer, originalname) => {
 };
 
 // Add Interview
+// controllers/interviewController.js
+
 exports.addInterview = async (req, res) => {
   try {
-    const { personName, designation, excerpt, qa } = req.body;
-    const parsedQa = JSON.parse(qa); // qa comes as string from form-data
+    const { interviewTitle, personName, designation, excerpt, qa } = req.body;
+    const parsedQa = JSON.parse(qa);
 
-    let imageUrl = '';
-    if (req.file) {
-      imageUrl = await uploadToImageKit(req.file.buffer, req.file.originalname);
+    let profileImgUrl = '';
+    let interviewImgUrl = '';
+
+    if (req.files?.profileImage?.[0]) {
+      profileImgUrl = await uploadToImageKit(req.files.profileImage[0].buffer, req.files.profileImage[0].originalname);
+    }
+
+    if (req.files?.interviewImage?.[0]) {
+      interviewImgUrl = await uploadToImageKit(req.files.interviewImage[0].buffer, req.files.interviewImage[0].originalname);
     }
 
     const newInterview = new Interview({
+      interviewTitle,
       personName,
       designation,
-      profileImage: imageUrl,
+      profileImage: profileImgUrl,
       excerpt,
-      qa: parsedQa
+      qa: parsedQa,
+      interviewImage: interviewImgUrl
     });
 
     const saved = await newInterview.save();
@@ -42,6 +52,7 @@ exports.addInterview = async (req, res) => {
     sendResponse(res, false, "Failed to add interview", error.message);
   }
 };
+
 
 
 // Get all with pagination and search
@@ -89,17 +100,21 @@ exports.getInterviewById = async (req, res) => {
 // Update
 exports.updateInterview = async (req, res) => {
   try {
-    const { personName, designation, excerpt, qa } = req.body;
+    const { interviewTitle, personName, designation, excerpt, qa } = req.body;
     const parsedQa = qa ? JSON.parse(qa) : [];
 
     const interview = await Interview.findById(req.params.id);
     if (!interview) return sendResponse(res, false, "Interview not found");
 
-    if (req.file) {
-      const newUrl = await uploadToImageKit(req.file.buffer, req.file.originalname);
-      interview.profileImage = newUrl;
+    if (req.files?.profileImage?.[0]) {
+      interview.profileImage = await uploadToImageKit(req.files.profileImage[0].buffer, req.files.profileImage[0].originalname);
     }
 
+    if (req.files?.interviewImage?.[0]) {
+      interview.interviewImage = await uploadToImageKit(req.files.interviewImage[0].buffer, req.files.interviewImage[0].originalname);
+    }
+
+    interview.interviewTitle = interviewTitle || interview.interviewTitle;
     interview.personName = personName || interview.personName;
     interview.designation = designation || interview.designation;
     interview.excerpt = excerpt || interview.excerpt;
@@ -111,6 +126,7 @@ exports.updateInterview = async (req, res) => {
     sendResponse(res, false, "Failed to update", err.message);
   }
 };
+
 
 
 // Delete

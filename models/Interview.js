@@ -7,6 +7,8 @@ const questionAnswerSchema = new mongoose.Schema({
 
 const interviewSchema = new mongoose.Schema({
 
+    interviewTitle: { type: String, required: true },
+
     personName: { type: String, required: true },
 
     designation: { type: String, required: true },
@@ -19,6 +21,11 @@ const interviewSchema = new mongoose.Schema({
     excerpt: { type: String },
 
     qa: [questionAnswerSchema],
+
+    interviewImage: {
+        type: String,
+        default: 'https://placehold.co/600x400'
+    },
 
     createdAt: { type: Date, default: Date.now }
 
