@@ -12,6 +12,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const siteDetailsRoutes = require("./routes/siteDetailsRoutes");
 const blogRoutes = require("./routes/blogRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const interviewRoutes = require("./routes/interviewRoutes")
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api', adminRoutes)
 app.use('/api', siteDetailsRoutes)
 app.use('/api', blogRoutes)
 app.use('/api', contactRoutes)
+app.use('/api', interviewRoutes)
 // ========= Routes end=============
 
 app.get('/', (req, res) => {
