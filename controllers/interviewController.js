@@ -20,9 +20,20 @@ const uploadToImageKit = async (fileBuffer, originalname) => {
 // Add Interview
 // controllers/interviewController.js
 
+
 exports.addInterview = async (req, res) => {
   try {
-    const { interviewTitle, personName, designation, excerpt, qa } = req.body;
+    const {
+      interviewTitle,
+      personName,
+      designation,
+      excerpt,
+      qa,
+      metaTitle,
+      metaDescription,
+      metaKeywords
+    } = req.body;
+
     const parsedQa = JSON.parse(qa);
 
     let profileImgUrl = '';
@@ -43,7 +54,12 @@ exports.addInterview = async (req, res) => {
       profileImage: profileImgUrl,
       excerpt,
       qa: parsedQa,
-      interviewImage: interviewImgUrl
+      interviewImage: interviewImgUrl,
+
+      // ✅ Add meta fields
+      metaTitle,
+      metaDescription,
+      metaKeywords
     });
 
     const saved = await newInterview.save();
@@ -100,7 +116,17 @@ exports.getInterviewById = async (req, res) => {
 // Update
 exports.updateInterview = async (req, res) => {
   try {
-    const { interviewTitle, personName, designation, excerpt, qa } = req.body;
+    const {
+      interviewTitle,
+      personName,
+      designation,
+      excerpt,
+      qa,
+      metaTitle,
+      metaDescription,
+      metaKeywords
+    } = req.body;
+
     const parsedQa = qa ? JSON.parse(qa) : [];
 
     const interview = await Interview.findById(req.params.id);
@@ -120,13 +146,17 @@ exports.updateInterview = async (req, res) => {
     interview.excerpt = excerpt || interview.excerpt;
     interview.qa = parsedQa.length > 0 ? parsedQa : interview.qa;
 
+    // ✅ Add meta field updates
+    interview.metaTitle = metaTitle || interview.metaTitle;
+    interview.metaDescription = metaDescription || interview.metaDescription;
+    interview.metaKeywords = metaKeywords || interview.metaKeywords;
+
     const updated = await interview.save();
     sendResponse(res, true, "Interview updated", updated);
   } catch (err) {
     sendResponse(res, false, "Failed to update", err.message);
   }
 };
-
 
 
 // Delete

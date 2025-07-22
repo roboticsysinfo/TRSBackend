@@ -8,9 +8,7 @@ const questionAnswerSchema = new mongoose.Schema({
 const interviewSchema = new mongoose.Schema({
 
     interviewTitle: { type: String, required: true },
-
     personName: { type: String, required: true },
-
     designation: { type: String, required: true },
 
     profileImage: {
@@ -19,13 +17,17 @@ const interviewSchema = new mongoose.Schema({
     },
 
     excerpt: { type: String },
-
     qa: [questionAnswerSchema],
 
     interviewImage: {
         type: String,
         default: 'https://placehold.co/600x400'
     },
+
+    // ➕ SEO fields
+    metaTitle: { type: String },
+    metaDescription: { type: String },
+    metaKeywords: { type: String },
 
     createdAt: { type: Date, default: Date.now }
 
